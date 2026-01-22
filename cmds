@@ -1,0 +1,240 @@
+local players = game:GetService("Players")
+local lp = players.LocalPlayer
+local runService = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+local tweenService = game:GetService("TweenService")
+
+if game.CoreGui:FindFirstChild("TNM_FINAL_SYSTEM") then
+    game.CoreGui.TNM_FINAL_SYSTEM:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "TNM_FINAL_SYSTEM"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+local flying, noclip, keepMenuOpen, infJump, espEnabled = false, false, false, false, false
+local antiSit = false
+local flySpeed = 75
+local keys = {a = false, d = false, w = false, s = false}
+
+local SelectorFrame = Instance.new("Frame")
+SelectorFrame.Name = "Selector"
+SelectorFrame.Size = UDim2.new(0, 320, 0, 200)
+SelectorFrame.Position = UDim2.new(0.5, -160, 0.4, 0)
+SelectorFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+SelectorFrame.BorderSizePixel = 0
+SelectorFrame.Parent = ScreenGui
+Instance.new("UICorner", SelectorFrame).CornerRadius = UDim.new(0, 15)
+
+local UIStrokeS = Instance.new("UIStroke", SelectorFrame)
+UIStrokeS.Thickness = 3
+UIStrokeS.Color = Color3.fromRGB(170, 0, 255)
+
+local S_Title = Instance.new("TextLabel", SelectorFrame)
+S_Title.Size = UDim2.new(1, 0, 0, 60)
+S_Title.Text = "TNM STUDIOS"
+S_Title.TextColor3 = Color3.new(1, 1, 1)
+S_Title.Font = Enum.Font.GothamBold
+S_Title.TextSize = 28
+S_Title.BackgroundTransparency = 1
+
+local PCBtn = Instance.new("TextButton", SelectorFrame)
+PCBtn.Size = UDim2.new(0, 130, 0, 60)
+PCBtn.Position = UDim2.new(0.05, 0, 0.5, 0)
+PCBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+PCBtn.Text = "PC"
+PCBtn.TextColor3 = Color3.new(1, 1, 1)
+PCBtn.Font = Enum.Font.GothamBold
+PCBtn.TextSize = 25
+Instance.new("UICorner", PCBtn)
+
+local MobBtn = Instance.new("TextButton", SelectorFrame)
+MobBtn.Size = UDim2.new(0, 130, 0, 60)
+MobBtn.Position = UDim2.new(0.55, 0, 0.5, 0)
+MobBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 255)
+MobBtn.Text = "MOBILE"
+MobBtn.TextColor3 = Color3.new(1, 1, 1)
+MobBtn.Font = Enum.Font.GothamBold
+MobBtn.TextSize = 25
+Instance.new("UICorner", MobBtn)
+
+local function LaunchHub(mode)
+    SelectorFrame:Destroy()
+    
+    local Main = Instance.new("Frame", ScreenGui)
+    Main.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    Main.BorderSizePixel = 0
+    Main.Position = UDim2.new(0.85, 0, 1.2, 0)
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+    
+    local MainStroke = Instance.new("UIStroke", Main)
+    MainStroke.Thickness = 3
+    MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+    if mode == "PC" then
+        Main.Size = UDim2.new(0, 220, 0, 480)
+    else
+        Main.Size = UDim2.new(0, 260, 0, 400)
+    end
+
+    task.spawn(function()
+        while Main do
+            MainStroke.Color = Color3.fromHSV(tick() % 5 / 5, 0.8, 1)
+            task.wait()
+        end
+    end)
+
+    local Title = Instance.new("TextLabel", Main)
+    Title.Size = UDim2.new(1, 0, 0, 40)
+    Title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Title.Text = "   TNM CMDS V5"
+    Title.TextColor3 = Color3.new(1, 1, 1)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 14
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Instance.new("UICorner", Title)
+
+    local SettingsBtn = Instance.new("ImageButton", Main)
+    SettingsBtn.Position = UDim2.new(0.88, 0, 0, 10)
+    SettingsBtn.Size = UDim2.new(0, 20, 0, 20)
+    SettingsBtn.Image = "rbxassetid://1204397029"
+    SettingsBtn.BackgroundTransparency = 1
+
+    local SettingsMenu = Instance.new("Frame", Main)
+    SettingsMenu.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    SettingsMenu.Position = UDim2.new(-1.05, 0, 0, 0)
+    SettingsMenu.Size = UDim2.new(0, 180, 0, 60)
+    SettingsMenu.Visible = false
+    Instance.new("UICorner", SettingsMenu)
+    
+    local keepOn = Instance.new("TextButton", SettingsMenu)
+    keepOn.Size = UDim2.new(0.9, 0, 0, 40)
+    keepOn.Position = UDim2.new(0.05, 0, 0.15, 0)
+    keepOn.Text = "Keep Open: OFF"
+    keepOn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    keepOn.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", keepOn)
+
+    SettingsBtn.MouseButton1Click:Connect(function() SettingsMenu.Visible = not SettingsMenu.Visible end)
+    keepOn.MouseButton1Click:Connect(function()
+        keepMenuOpen = not keepMenuOpen
+        keepOn.Text = "Keep Open: " .. (keepMenuOpen and "ON" or "OFF")
+        keepOn.BackgroundColor3 = keepMenuOpen and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(40, 40, 40)
+    end)
+
+    local CommandArea = Instance.new("ScrollingFrame", Main)
+    CommandArea.Position = UDim2.new(0, 10, 0, 50)
+    CommandArea.Size = UDim2.new(1, -20, 0, mode == "PC" and 380 or 300)
+    CommandArea.BackgroundTransparency = 1
+    CommandArea.ScrollBarThickness = 2
+
+    local UIList = Instance.new("UIListLayout", CommandArea)
+    UIList.Padding = UDim.new(0, 8)
+
+    local function addCmd(txt)
+        local f = Instance.new("Frame", CommandArea)
+        f.Size = UDim2.new(1, 0, 0, mode == "PC" and 25 or 35)
+        f.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        Instance.new("UICorner", f)
+        local l = Instance.new("TextLabel", f)
+        l.Size = UDim2.new(1, -10, 1, 0); l.Position = UDim2.new(0, 10, 0, 0)
+        l.Text = "> " .. txt; l.TextColor3 = Color3.new(1, 1, 1)
+        l.Font = Enum.Font.Code; l.TextSize = 12; l.BackgroundTransparency = 1
+        l.TextXAlignment = Enum.TextXAlignment.Left
+    end
+
+    local list = {"fly / unfly", "speed [sayı]", "jp [sayı]", "esp / unesp", "bright", "btools", "fps", "noclip", "infjump", "antisit", "rejoin"}
+    for _, v in pairs(list) do addCmd(v) end
+
+    local Author = Instance.new("TextLabel", Main)
+    Author.Size = UDim2.new(1, 0, 0, 30)
+    Author.Position = UDim2.new(0, 0, 1, -30)
+    Author.Text = "by TNM_Yigido"
+    Author.Font = Enum.Font.GothamBold
+    Author.TextSize = 14
+    Author.BackgroundTransparency = 1
+    task.spawn(function()
+        while Author do
+            Author.TextColor3 = Color3.fromHSV(tick() % 5 / 5, 0.8, 1)
+            task.wait()
+        end
+    end)
+
+    local IntroText = Instance.new("TextLabel", ScreenGui)
+    IntroText.Size = UDim2.new(0, 400, 0, 100); IntroText.Position = UDim2.new(0.5, -200, 0.45, 0)
+    IntroText.Text = "TNM STUDIOS"; IntroText.TextColor3 = Color3.new(1, 1, 1)
+    IntroText.Font = Enum.Font.GothamBold; IntroText.TextSize = 50; IntroText.TextTransparency = 1; IntroText.BackgroundTransparency = 1
+    
+    tweenService:Create(IntroText, TweenInfo.new(1.5), {TextTransparency = 0}):Play()
+    task.wait(2.5)
+    tweenService:Create(IntroText, TweenInfo.new(1.2), {TextTransparency = 1}):Play()
+    task.wait(1.2)
+    IntroText:Destroy()
+    
+    Main:TweenPosition(UDim2.new(mode == "PC" and 0.85 or 0.65, 0, 0.94, 0), "Out", "Quart", 1.5)
+
+    lp.Chatted:Connect(function(msg)
+        local args = msg:split(" ")
+        local cmd = args[1]:lower()
+        if cmd == ";fly" then
+            local ts = tonumber(args[2]) or 5; flySpeed = ts * 15
+            if flying then return end flying = true
+            local root = lp.Character:WaitForChild("HumanoidRootPart")
+            local bv = Instance.new("BodyVelocity", root); bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            local bg = Instance.new("BodyGyro", root); bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            task.spawn(function()
+                while flying do
+                    local cam = workspace.CurrentCamera.CFrame; local dir = Vector3.new(0,0,0)
+                    if keys.w then dir = dir + cam.LookVector end if keys.s then dir = dir - cam.LookVector end
+                    if keys.a then dir = dir - cam.RightVector end if keys.d then dir = dir + cam.RightVector end
+                    bv.Velocity = dir * flySpeed; bg.CFrame = cam; lp.Character.Humanoid.PlatformStand = true; task.wait()
+                end
+                bv:Destroy(); bg:Destroy(); if lp.Character:FindFirstChild("Humanoid") then lp.Character.Humanoid.PlatformStand = false end
+            end)
+        elseif cmd == ";unfly" then flying = false
+        elseif cmd == ";speed" then lp.Character.Humanoid.WalkSpeed = tonumber(args[2]) or 16
+        elseif cmd == ";jp" then lp.Character.Humanoid.JumpPower = tonumber(args[2]) or 50
+        elseif cmd == ";esp" then espEnabled = true
+        elseif cmd == ";unesp" then espEnabled = false
+        elseif cmd == ";bright" then game.Lighting.Brightness = 2; game.Lighting.ClockTime = 14; game.Lighting.GlobalShadows = false
+        elseif cmd == ";btools" then for i=1,4 do Instance.new("HopperBin", lp.Backpack).BinType = i end
+        elseif cmd == ";fps" then settings().Rendering.QualityLevel = 1; for _,v in pairs(game:GetDescendants()) do if v:IsA("Decal") then v:Destroy() end end
+        elseif cmd == ";noclip" then noclip = true
+        elseif cmd == ";clip" then noclip = false
+        elseif cmd == ";infjump" then infJump = true
+        elseif cmd == ";antisit" then antiSit = true
+        elseif cmd == ";rejoin" then game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, lp)
+        end
+    end)
+
+    if mode == "PC" then
+        Main.MouseEnter:Connect(function() Main:TweenPosition(UDim2.new(0.85, 0, 0.45, 0), "Out", "Quart", 0.5) end)
+        Main.MouseLeave:Connect(function() if not keepMenuOpen and not SettingsMenu.Visible then Main:TweenPosition(UDim2.new(0.85, 0, 0.94, 0), "Out", "Quart", 0.5) end end)
+    end
+end
+
+PCBtn.MouseButton1Click:Connect(function() LaunchHub("PC") end)
+MobBtn.MouseButton1Click:Connect(function() LaunchHub("MOBILE") end)
+
+task.spawn(function()
+    while task.wait(1) do
+        if espEnabled then
+            for _, v in pairs(players:GetPlayers()) do
+                if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    if not v.Character.HumanoidRootPart:FindFirstChild("TNM_ESP") then
+                        local b = Instance.new("BoxHandleAdornment", v.Character.HumanoidRootPart); b.Name = "TNM_ESP"; b.Size = v.Character:GetExtentsSize(); b.Adornee = v.Character; b.AlwaysOnTop = true; b.Transparency = 0.5; b.Color3 = Color3.fromRGB(170, 0, 255)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+runService.Stepped:Connect(function()
+    if noclip and lp.Character then for _,v in pairs(lp.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end
+    if antiSit and lp.Character:FindFirstChild("Humanoid") then lp.Character.Humanoid.Sit = false end
+end)
+uis.InputBegan:Connect(function(i, g) if not g then keys[i.KeyCode.Name:lower()] = true end end)
+uis.InputEnded:Connect(function(i, g) if not g then keys[i.KeyCode.Name:lower()] = false end end)
+uis.JumpRequest:Connect(function() if infJump then lp.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping) end end)
